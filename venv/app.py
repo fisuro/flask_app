@@ -25,7 +25,7 @@ def api_id():
     if 'id' in request.args:
         id = int(request.args['id'])
     else:
-        return "Error: No id provided."
+        return "Error: No id provided.", 400
 
     results = []
 
