@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import flask
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
@@ -26,14 +27,17 @@ def api_id():
         id = int(request.args['id'])
     else:
         return "Error: No id provided.", 400
+    kita = []
+    for i in users:
+        if id == i["id"]:
+            kita = i
+    return kita
 
-    results = []
-
-    for user in users:
-        if user['id'] == id:
-            results.append(user)
-
-    return jsonify(results)
+@app.route("/api/v1/resources/users", methods=['POST'])
+def starting_url():
+    json_data = flask.request.json
+    users.append(json_data)
+    return json_data
 
 @app.route("/healtcheck", methods=['GET'])
 def healtcheck():
