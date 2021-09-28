@@ -17,27 +17,23 @@ users = [
     }
 ]
 
-@app.route("/api/v1/resources/users/all", methods=['GET'])
+@app.route("/api/v1/resources/users/all", methods=['GET', 'POST'])
 def api_all():
-    return jsonify(users)
+    if request.method == 'POST':
+        json_data = flask.request.json
+        users.append(json_data)
+        return json_data
+    else: 
+        return jsonify(users)
 
-@app.route("/api/v1/resources/users", methods=['GET'])
-def api_id():
-    if 'id' in request.args:
-        id = int(request.args['id'])
-    else:
-        return "Error: No id provided.", 400
-    kita = []
-    for i in users:
-        if id == i["id"]:
-            kita = i
-    return kita
+@app.route("/api/v1/resources/users/<int:id>", methods=['GET'])
+def api_id(id):
+    for user in users:
+        if user["id"] == id:
+            return jsonify(user)
+    return 'Error, non-correct id passed', 400
 
-@app.route("/api/v1/resources/users", methods=['POST'])
-def starting_url():
-    json_data = flask.request.json
-    users.append(json_data)
-    return json_data
+
 
 @app.route("/healtcheck", methods=['GET'])
 def healtcheck():
