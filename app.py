@@ -14,7 +14,8 @@ app.config["DEBUG"] = True
 
 #Loading schema to a variable
 def load_schema():
-    schema = json.load(open('schema.json'))
+    with open('schema.json') as f:
+        schema = json.load(f)
     return schema
 #This function goes trough the keys(id's) inside users file and get's the last id, then parses it to int, adds a counter and returns the new ID as a string
 def get_index():
@@ -23,13 +24,21 @@ def get_index():
     
 #Reading users data from json file and storing them as variable
 def load_users():
-    json_object = json.load(open('users.json'))
+    with open('users.json') as f:
+        json_object = json.load(f)
     return json_object
 
 #This helper function is writing the the whole dict to a file
 def write_to_file(file, object):
     with open(file, 'w') as writefile:
         writefile.write(object)
+
+def add_user(data):
+    json_object = load_users()
+    index = get_index()
+    json_object[index] = data
+    write_to_file('users.json', json.dumps(json_object))
+    return json_object[index]
 
 #Function for validation json data sent by POST request with catching exception
 #And iretates trough the existing users comparing the emails returning only true if
@@ -53,21 +62,19 @@ def api_all():
     return jsonify(load_users())
 
 @app.route("/users", methods=['POST'])
-def add_user():
+def post_user():
     if(validate_json(request.json) == "Success"):
-        json_object = load_users()
-        json_object[get_index()] = request.json
-        write_to_file('users.json', json.dumps(json_object))
-        return json_object
-    else: return validate_json(request.json)
+        return add_user(request.json)
+    else: 
+        return validate_json(request.json)
 
 @app.route("/users/<string:id>", methods=['GET'])
 def get_user(id):
     json_object = load_users()
     if id in json_object.keys():
-        # return jsonify(json_object[id])
-        return render_template('user.html')
-    else: return 'Error, non-correct id passed', 400
+        return render_template('user.html', data = json_object[id])
+    else: 
+        return 'Error, non-correct id passed', 400
 
 @app.route("/users/<string:id>", methods=['DELETE'])
 def delete_user(id):
@@ -76,7 +83,8 @@ def delete_user(id):
         json_object.pop(id)
         write_to_file('users.json', json.dumps(json_object))
         return 'Success', 200
-    return 'Error, non-correct id passed', 400
+    else:
+        return 'Error, non-correct id passed', 400
 
 @app.route("/users/<string:id>", methods=['PUT'])
 def update_user(id):
@@ -89,7 +97,8 @@ def update_user(id):
         }
         write_to_file('users.json', json.dumps(json_object))
         return json_object
-    return 'Error, non-correct id passed', 400
+    else:
+        return 'Error, non-correct id passed', 400
 
 @app.route("/healtcheck", methods=['GET'])
 def healtcheck():
