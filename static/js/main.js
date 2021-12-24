@@ -6,7 +6,7 @@ $(document).ready(function() {
             url : '/users',
             success: function(data){
                 for(var i in data){
-                    var markup = "<tr><td>" + i + "</td><td>" + data[i].name + "</td><td>" + data[i].surname + "</td><td>" + data[i].email +"</td><td> <button type='button' class='edit' id='edit" + i + "' name='edituj'>Edit</button> <button  type='button' class='delete' id='delete" + i + "' name='obrisi'>Delete</button></td></tr>";
+                    var markup = "<tr><td>" + data[i].id + "</td><td>" + data[i].name + "</td><td>" + data[i].surname + "</td><td>" + data[i].email +"</td><td> <button type='button' class='edit' id='edit" + data[i].id + "' name='edituj'>Edit</button> <button  type='button' class='delete' id='delete" + data[i].id + "' name='obrisi'>Delete</button></td></tr>";
                     $("#customers tbody").append(markup);    
                 } 
                 $(".delete").click(function(){

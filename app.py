@@ -1,44 +1,74 @@
-from os import read, write
 from flask import Flask, request, jsonify, render_template
-import flask
 import json
 from jsonschema import validate
 import jsonschema
-from flask_ngrok import run_with_ngrok
-
-
+# from flask_ngrok import run_with_ngrok
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
-app.config["DEBUG"] = True
+# app.config["DEBUG"] = True
 # run_with_ngrok(app)
+
+# POSTGRESQL_URI = 'postgres://axnbpeci:rADWtHAG9X0UDVyrJyvenm8-uX4GjZmR@tyke.db.elephantsql.com/axnbpeci'
+POSTGRESQL_URI='postgres://postgres:mysecretpassword@localhost:5432/postgres'
+connection = psycopg2.connect(POSTGRESQL_URI)
+
+try:
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("CREATE TABLE users (name VARCHAR(43), surname VARCHAR(43), email VARCHAR(43) UNIQUE NOT NULL, id SERIAL PRIMARY KEY);")
+except psycopg2.errors.DuplicateTable:
+    pass
 
 #Loading schema to a variable
 def load_schema():
     with open('schema.json') as f:
         schema = json.load(f)
     return schema
-#This function goes trough the keys(id's) inside users file and get's the last id, then parses it to int, adds a counter and returns the new ID as a string
-def get_index():
-    index = int((list(load_users().keys()))[-1]) + 1
-    return str(index)
-    
-#Reading users data from json file and storing them as variable
-def load_users():
-    with open('users.json') as f:
-        json_object = json.load(f)
-    return json_object
 
-#This helper function is writing the the whole dict to a file
-def write_to_file(file, object):
-    with open(file, 'w') as writefile:
-        writefile.write(object)
+def add_user_db(data):
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                sql = 'INSERT INTO users (name, surname, email) VALUES ( %s, %s, %s)'
+                val = (data['name'], data['surname'], data['email'])
+                cursor.execute(sql, val)
+        return data
+    except psycopg2.errors.UniqueViolation:
+        return "Error: Email already exists"
 
-def add_user(data):
-    json_object = load_users()
-    index = get_index()
-    json_object[index] = data
-    write_to_file('users.json', json.dumps(json_object))
-    return json_object[index]
+def load_all_users_db():
+    with connection:
+        with connection.cursor() as cursor:
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM users ORDER BY id;")
+            users = cursor.fetchall()
+        return users
+
+def find_user_db(id):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(f"SELECT * FROM users WHERE id = {id};")
+            user = cursor.fetchall()
+        return user
+
+def delete_user_db(id):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(f"DELETE FROM users WHERE id = {id};")
+        return 'Success'
+
+def update_user_db(id, data):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor = connection.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(f"UPDATE users SET name='{data['name']}', surname='{data['surname']}' WHERE id = {id};")
+            cursor.execute(f"SELECT * FROM users WHERE id = {id};")
+            user = cursor.fetchall()
+        return user
 
 #Function for validation json data sent by POST request with catching exception
 #And iretates trough the existing users comparing the emails returning only true if
@@ -49,56 +79,35 @@ def validate_json(to_validate):
         validate(instance=to_validate, schema=schema)
     except jsonschema.exceptions.ValidationError as err:
         return "Bad request", 400
-
-    json_object = load_users()
-    for user in json_object:
-        if json_object[user]['email'] == to_validate['email']:
-            return "Email already in use", 406
     return "Success"
  
 #Defining route for reading and adding users 
 @app.route("/users", methods=['GET'])
 def api_all():
-    return jsonify(load_users())
+    return jsonify(load_all_users_db())
 
 @app.route("/users", methods=['POST'])
 def post_user():
-    if(validate_json(request.json) == "Success"):
-        return add_user(request.json)
+    validation_response = validate_json(request.json)
+    if(validation_response == "Success"):
+        return add_user_db(request.json)
     else: 
-        return validate_json(request.json)
+        return validation_response
 
-@app.route("/users/<string:id>", methods=['GET'])
+@app.route("/users/<int:id>", methods=['GET'])
 def get_user(id):
-    json_object = load_users()
-    if id in json_object.keys():
-        return render_template('user.html', data = json_object[id])
-    else: 
+    if find_user_db(id):
+        return render_template('user.html', data = find_user_db(id)[0])
+    else:
         return 'Error, non-correct id passed', 400
 
-@app.route("/users/<string:id>", methods=['DELETE'])
+@app.route("/users/<int:id>", methods=['DELETE'])
 def delete_user(id):
-    json_object = load_users()
-    if id in json_object.keys():
-        json_object.pop(id)
-        write_to_file('users.json', json.dumps(json_object))
-        return 'Success', 200
-    else:
-        return 'Error, non-correct id passed', 400
+    return delete_user_db(id)
 
-@app.route("/users/<string:id>", methods=['PUT'])
+@app.route("/users/<int:id>", methods=['PUT'])
 def update_user(id):
-    json_object = load_users()
-    if id in json_object.keys():
-        json_object[id] = {
-            "name":request.json['name'],
-            "surname":request.json['surname'],
-            "email": json_object[id]['email']
-        }
-        write_to_file('users.json', json.dumps(json_object))
-        return json_object
-    else:
-        return 'Error, non-correct id passed', 400
+    return jsonify(update_user_db(id, request.json)[0])
 
 @app.route("/healtcheck", methods=['GET'])
 def healtcheck():
@@ -109,4 +118,5 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run()
+    # app.run()
+    app.run(debug=True, host='0.0.0.0', port=8080)
