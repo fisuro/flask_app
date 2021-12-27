@@ -2,16 +2,14 @@ from flask import Flask, request, jsonify, render_template
 import json
 from jsonschema import validate
 import jsonschema
-# from flask_ngrok import run_with_ngrok
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
-# app.config["DEBUG"] = True
 # run_with_ngrok(app)
 
-# POSTGRESQL_URI = 'postgres://axnbpeci:rADWtHAG9X0UDVyrJyvenm8-uX4GjZmR@tyke.db.elephantsql.com/axnbpeci'
-POSTGRESQL_URI='postgres://postgres:mysecretpassword@localhost:5432/postgres'
+POSTGRESQL_URI = 'postgres://axnbpeci:rADWtHAG9X0UDVyrJyvenm8-uX4GjZmR@tyke.db.elephantsql.com/axnbpeci'
+# POSTGRESQL_URI='postgres://postgres:mysecretpassword@postgres/postgres'
 connection = psycopg2.connect(POSTGRESQL_URI)
 
 try:
