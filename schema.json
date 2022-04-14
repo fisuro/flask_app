@@ -2,8 +2,16 @@
   "type" : "object",
   "additionalProperties": false,
   "properties" : {
-      "name" : {"type" : "string"},
-      "surname" : {"type" : "string"},
+      "name" : {
+        "type" : "string",
+        "minLength": 2,
+        "maxLength": 127
+    },
+      "surname" : {
+        "type" : "string",
+        "minLength": 2,
+        "maxLength": 127
+    },
       "email": {
           "type" : "string",
           "format": "email",
