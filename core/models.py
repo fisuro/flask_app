@@ -13,3 +13,29 @@ class User(db.Model):
         self.name = name
         self.surname = surname
         self.email = email
+    
+    def json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'surname': self.surname,
+            'email': self.email
+        }
+
+    @classmethod
+    def find_by_id(cls, user_id):
+        return cls.query.filter_by(id=user_id).first()
+
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def commit_user(self):
+        db.session.commit()
+
+    def rollback(self):
+        db.session.rollback()

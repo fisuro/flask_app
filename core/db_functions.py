@@ -3,7 +3,7 @@ from sqlalchemy import exc
 from jsonschema import validate
 import jsonschema
 import json
-from core.models import db, User
+from core.models import User
 
 def load_schema():
     with open('schema.json') as f:
@@ -12,36 +12,33 @@ def load_schema():
 
 def add_user_db(data):
     try:
-        user = User(name=data['name'], surname=data['surname'], email=data['email'])
-        db.session.add(user)
-        db.session.commit()
+        user = User(data['name'], data['surname'], data['email'])
+        user.save_to_db()
         return data
     except exc.IntegrityError:
-        db.session.rollback()
+        user.rollback()
         return "Error: Email already exists"
 
 def load_all_users_db():
     table = User.query.all()
     list = []
-    for row in table:
-        list.append({column: str(getattr(row, column)) for column in row.__table__.c.keys()})
+    for user in table:
+        list.append(user.json())
     return sorted(list, key = itemgetter('id'))
 
 def find_user_db(id):
-    user = User.query.filter(User.id == id).one()
-    return {column: str(getattr(user, column)) for column in user.__table__.c.keys()}
+    return User.find_by_id(id).json()
 
 def delete_user_db(id):
-    User.query.filter(User.id == id).delete()
-    db.session.commit()
+    User.find_by_id(id).delete_from_db()
     return 'Success'
 
 def update_user_db(id, data):
-    user = User.query.filter(User.id == id).one()
+    user = User.find_by_id(id)
     user.name = data['name']
     user.surname = data['surname']
-    db.session.commit()
-    return {column: str(getattr(user, column)) for column in user.__table__.c.keys()}
+    user.commit_user()
+    return user.json()
 
 def validate_json(to_validate):
     schema = load_schema()
