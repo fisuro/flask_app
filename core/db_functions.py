@@ -1,5 +1,4 @@
 from operator import itemgetter
-from sqlalchemy import exc
 from jsonschema import validate
 import jsonschema
 import json
@@ -11,13 +10,11 @@ def load_schema():
     return schema
 
 def add_user_db(data):
-    try:
-        user = User(data['name'], data['surname'], data['email'])
-        user.save_to_db()
-        return data
-    except exc.IntegrityError:
-        user.rollback()
+    if User.find_by_email(data['email']):
         return "Error: Email already exists"
+    user = User(data['name'], data['surname'], data['email'])
+    user.save_to_db()
+    return data
 
 def load_all_users_db():
     table = User.query.all()

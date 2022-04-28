@@ -1,5 +1,6 @@
 from core import app
 from flask_sqlalchemy import SQLAlchemy
+import uuid
 
 db = SQLAlchemy(app)
 
@@ -26,6 +27,10 @@ class User(db.Model):
     def find_by_id(cls, user_id):
         return cls.query.filter_by(id=user_id).first()
 
+    @classmethod
+    def find_by_email(cls, user_email):
+        return cls.query.filter_by(email=user_email).first()
+
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
@@ -36,6 +41,3 @@ class User(db.Model):
 
     def commit_user(self):
         db.session.commit()
-
-    def rollback(self):
-        db.session.rollback()
