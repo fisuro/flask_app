@@ -1,6 +1,6 @@
 from flask import request, jsonify, render_template
 from core import app
-from core.db_functions import load_all_users_db, validate_json, add_user_db, find_user_db, delete_user_db, update_user_db
+from core.db_functions import load_all_users_db, validate_json, add_user_db, find_user_db, delete_user_db, update_user_db, authenication
 
 @app.route("/users", methods=['GET'])
 def api_all():
@@ -35,3 +35,15 @@ def healtcheck():
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login.html')
+
+@app.route('/auth', methods=['POST'])
+def auth():
+    if authenication(request.json):
+        return request.json
+        # # api_all()
+    else:
+        return 'kurac', 400

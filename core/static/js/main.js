@@ -89,4 +89,28 @@ $(document).ready(function() {
             }
         })
     })
+    $('#login').click(function(){
+        var kita = {
+            username : $('#username').val(),
+            password: $('#password').val()
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/auth',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(kita),
+
+            // success: function(request, message){
+            //     alert(message);
+            //     window.location.href = "/";
+            // },
+
+            error: function(request, message){
+                document.getElementById("error").innerHTML = "Wrong email or password."
+                return false;
+            }
+        })
+    })
+
 });
