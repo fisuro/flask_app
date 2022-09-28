@@ -1,7 +1,10 @@
 from operator import itemgetter
+from sre_constants import SUCCESS
 from jsonschema import validate
 import jsonschema
 import json
+
+from sqlalchemy import false
 from core.models import User
 
 def load_schema():
@@ -12,15 +15,13 @@ def load_schema():
 def add_user_db(data):
     if User.find_by_email(data['email']):
         return "Error: Email already exists"
-    user = User(data['name'], data['surname'], data['email'])
-    user.save_to_db()
+    else:
+        user = User(data['name'], data['surname'], data['email'])
+        user.save_to_db()
     return data
 
 def load_all_users_db():
-    table = User.query.all()
-    list = []
-    for user in table:
-        list.append(user.json())
+    list = [user.json() for user in User.query.all()]
     return sorted(list, key = itemgetter('id'))
 
 def find_user_db(id):
@@ -32,8 +33,7 @@ def delete_user_db(id):
 
 def update_user_db(id, data):
     user = User.find_by_id(id)
-    user.name = data['name']
-    user.surname = data['surname']
+    user.name, user.surname = data['name'], data['surname']
     user.commit_user()
     return user.json()
 
@@ -44,3 +44,11 @@ def validate_json(to_validate):
     except jsonschema.exceptions.ValidationError as err:
         return False
     return True
+
+def authenication(data):
+    user = User.find_by_email(data['username'])
+    if user:
+        if user.name == data['password']:
+            return True
+    else:
+        return False
