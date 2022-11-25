@@ -1,7 +1,13 @@
 from flask import Flask
+from core.database import db_session
+from flask_cors import CORS
+
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://axnbpeci:rADWtHAG9X0UDVyrJyvenm8-uX4GjZmR@tyke.db.elephantsql.com/axnbpeci'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+CORS(app)
 
-from core import views
+import core.views
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()

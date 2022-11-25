@@ -1,20 +1,20 @@
-from core import app
-from flask_sqlalchemy import SQLAlchemy
-import uuid
+# from core import app
+from sqlalchemy import Column, Integer, String
+from core.database import Base
+from core.database import db_session
 
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
-    surname = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False)
+    surname = Column(String(80), nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
 
     def __init__(self, name, surname, email):
         self.name = name
         self.surname = surname
         self.email = email
-    
+
     def json(self):
         return {
             'id': self.id,
@@ -32,12 +32,10 @@ class User(db.Model):
         return cls.query.filter_by(email=user_email).first()
 
     def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
-
+        db_session.add(self)
+        db_session.commit()
     def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
-
+        db_session.delete(self)
+        db_session.commit()
     def commit_user(self):
-        db.session.commit()
+        db_session.commit()

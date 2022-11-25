@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import './App.css'
+import UserTable from './UserTable'
 
 function DisplayUsers (){
 const [users, setUsers] = useState([{}])
@@ -71,19 +72,19 @@ export default function AddUsers (){
   return(
     <form onSubmit={handleSubmit}>
       <label>
-        <p>Username</p>
+        <p>USERNAME</p>
         <input type="text" onChange={e => setName(e.target.value)}/>
       </label>
       <label>
-        <p>Last Name</p>
+        <p>LAST NAME</p>
         <input type="text" onChange={e => setSurname(e.target.value)}/>
       </label>
       <label>
-        <p>email</p>
+        <p>EMAIL</p>
         <input type="text" onChange={e => setEmail(e.target.value)}/>
       </label>
       <div>
-        <button type="submit" >Submit</button>
+        <button type="submit" >SUBMIT</button>
       </div>
     </form>
   )

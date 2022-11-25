@@ -4,7 +4,7 @@ from jsonschema import validate
 import jsonschema
 import json
 
-from sqlalchemy import false
+# from sqlalchemy import false
 from core.models import User
 
 def load_schema():
